@@ -1,8 +1,13 @@
 # Vericred
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/vericred`. To experiment with that code, run `bin/console` for an interactive prompt.
+A client gem to interact with the Vericred API.  It provides useful helpers for:
 
-TODO: Delete this and the text above, and describe your gem
+- Futures
+- Sideloading data
+- Pagination (TODO)
+
+## Additional Documentation
+Full generated API docs here.  Documentation of the REST API itself here.
 
 ## Installation
 
@@ -20,9 +25,104 @@ Or install it yourself as:
 
     $ gem install vericred
 
+### With Rails
+
+Add a configuration block in `config/initializers/vericred.rb`
+```ruby
+Vericred.configure do |config|
+    config.api_key = ENV['VERICRED_API_KEY']
+end
+```
+
 ## Usage
 
-TODO: Write usage instructions here
+### Retrieving an Individual Record
+```ruby
+Vericred::Provider.find(npi) # => Vericred::Provider
+```
+
+### Retrieving a List of Records
+```ruby
+Vericred::Provider.search(search_term: 'foo', zip_code: '11215')
+    # => [Vericred::Provider, Vericred::Provider]
+```
+
+### Sideloaded data
+Sideloaded data is automatically added to the object found.  For example,
+`Vericred::ZipCounty` includes `Vericred::ZipCode` and `Vericred::County`
+with the following response (simplified)
+```json
+{
+    zip_counties: [{id: 1, zip_code_id: 2, county_id: 3}],
+    counties: [{id: 3, name: 'County'}],
+    zip_codes: [{id: 2, code: '12345'}]
+}
+```
+
+When we `.search` for `Vericred::ZipCounties` the records returned already 
+have access to their `Vericred::County` and `Vericred::ZipCode`
+
+```ruby
+zip_counties = Vericred::ZipCounty.search(zip_prefix: '12345')
+zip_counties.first.county.name # => County
+zip_counties.first.zip_code.code # => 12345
+```
+
+### Using Futures
+Any individual or list of records can be found using a Future.  This
+allows you to make a request early in the execution of your codepath 
+and allow the API to return a result without blocking execution.  It also
+allows you to make requests to the API in parallel.
+
+```ruby
+futures = [npi1, npi2, npi3]
+            .map { |id| Vericred::Provider.future.find(npi) }
+# do some other stuff in the meantime, then call #value to get the result
+providers = futures.map(&:value)
+```
+
+### Error Handling
+
+Generic error handling:
+```ruby
+begin
+    Vericred::Provider.find(npi)
+rescue Vericred::Error => e
+    # Retry or do something else
+end
+```
+
+Handling each possible error
+```ruby
+begin
+    Vericred::Provider.find(npi)
+rescue Vericred::UnauthenticatedError => e
+    # No credentials supplied
+rescue Vericred::UnauthorizedError => e
+    # Invalid credentials
+rescue Vericred::UnprocessableEntityError => e
+    # Invalid parameters have been specified
+rescue Vericred::UnknownError => e
+    # Something else has gone wrong - see e.errors for details
+end
+```
+Every instance of `Vericred::Error` has an `#errors` method, which returns
+the parsed error messages from the server.  They are in the format.
+```json
+{
+    errors: {
+        field_or_category: ['list', 'of', 'things', 'wrong']
+    }
+}
+```
+
+When parsed, they can be accessed like:
+```ruby
+begin
+    Vericred::Provider.find(npi)
+rescue Vericred::Error => e
+    e.errors.field_or_category.join(', ') # "list, of, things, wrong"
+end
 
 ## Development
 
