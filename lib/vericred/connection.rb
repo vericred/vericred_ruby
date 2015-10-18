@@ -1,7 +1,7 @@
-require 'celluloid'
-
 module Vericred
   class Connection
+    include Celluloid
+
     def initialize
       @connection = HTTPClient.new
     end

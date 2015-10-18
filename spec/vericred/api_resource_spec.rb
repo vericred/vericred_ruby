@@ -8,6 +8,15 @@ describe Vericred::ApiResource do
   Vericred::Bar = Class.new(Vericred::ApiResource)
   Vericred::Corge = Class.new(Vericred::ApiResource)
 
+  around do |example|
+    begin
+      old_connection = Vericred::ApiResource.connection
+      example.run
+    ensure
+      Vericred::ApiResource.connection = old_connection
+    end
+  end
+
   context '.uri' do
     it 'returns the normalized URI' do
       expect(Vericred::FooBar.uri).to eql('/foo_bars')
@@ -18,16 +27,28 @@ describe Vericred::ApiResource do
     end
   end
 
-  context '.search' do
-    around do |example|
-      begin
-        old_connection = Vericred::ApiResource.connection
-        example.run
-      ensure
-        Vericred::ApiResource.connection = old_connection
-      end
-    end
+  context '.find' do
+    it 'makes the correct request' do
+      Vericred::ApiResource.connection =
+        double(
+          :connection,
+          get: OpenStruct.new(content: JSON.unparse(foo_bar: {}), status: 200)
+        )
+      Vericred.config.api_key = '123'
 
+      Vericred::FooBar.find(1)
+
+      expect(Vericred::ApiResource.connection)
+        .to have_received(:get)
+        .with(
+          'https://api.vericred.com/foo_bars/1',
+          {},
+          { 'Vericred-Api-Key' => '123' }
+        )
+    end
+  end
+
+  context '.search' do
     it 'makes a request to our connection' do
       Vericred::ApiResource.connection =
         double(:connection, get: OpenStruct.new(content: '{}', status: 200))
