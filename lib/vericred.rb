@@ -11,6 +11,7 @@ require 'vericred/api_resource/relationships/base'
 require 'vericred/api_resource/relationships/belongs_to'
 require 'vericred/api_resource/relationships/has_many'
 require 'vericred/errors'
+require 'vericred/future_proxy'
 require 'vericred/connection'
 require 'vericred/resources'
 

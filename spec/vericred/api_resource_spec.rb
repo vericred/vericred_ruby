@@ -48,6 +48,27 @@ describe Vericred::ApiResource do
     end
   end
 
+  context '.future' do
+    it 'creates a chainable future proxy' do
+      Vericred::ApiResource.connection =
+        double(
+          :connection,
+          get: OpenStruct.new(content: JSON.unparse(foo_bar: {}), status: 200)
+        )
+      Vericred.config.api_key = '123'
+
+      Vericred::FooBar.future.find(1).value
+
+      expect(Vericred::ApiResource.connection)
+        .to have_received(:get)
+        .with(
+          'https://api.vericred.com/foo_bars/1',
+          {},
+          { 'Vericred-Api-Key' => '123' }
+        )
+    end
+  end
+
   context '.search' do
     it 'makes a request to our connection' do
       Vericred::ApiResource.connection =

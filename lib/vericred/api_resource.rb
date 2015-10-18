@@ -23,6 +23,10 @@ module Vericred
       new(data[root_name] || {}, data)
     end
 
+    def self.future
+      FutureProxy.new(self)
+    end
+
     def self.has_many(type)
       self.relationships[:has_many][type] =
         Vericred::Relationships::HasMany.new(self, type)
