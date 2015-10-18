@@ -123,6 +123,7 @@ begin
 rescue Vericred::Error => e
     e.errors.field_or_category.join(', ') # "list, of, things, wrong"
 end
+```
 
 ## Development
 
