@@ -15,7 +15,16 @@ module Vericred
     end
 
     def self.connection
-      @connection ||= Vericred::Connection.new
+      @connection ||= Vericred::Connection.pool(size: 5)
+    end
+
+    def self.find(id)
+      data = make_request(:get, uri(id), {}, headers)
+      new(data[root_name] || {}, data)
+    end
+
+    def self.future
+      FutureProxy.new(self)
     end
 
     def self.has_many(type)

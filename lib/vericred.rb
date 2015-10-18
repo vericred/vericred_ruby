@@ -1,17 +1,19 @@
-require "active_support"
-require "active_support/core_ext"
-require "httpclient"
-require "json"
-require "ostruct"
+require 'active_support'
+require 'active_support/core_ext'
+require 'celluloid/current'
+require 'httpclient'
+require 'json'
+require 'ostruct'
 
-require "vericred/version"
-require "vericred/api_resource"
-require "vericred/api_resource/relationships/base"
-require "vericred/api_resource/relationships/belongs_to"
-require "vericred/api_resource/relationships/has_many"
-require "vericred/errors"
-require "vericred/connection"
-require "vericred/resources"
+require 'vericred/version'
+require 'vericred/api_resource'
+require 'vericred/api_resource/relationships/base'
+require 'vericred/api_resource/relationships/belongs_to'
+require 'vericred/api_resource/relationships/has_many'
+require 'vericred/errors'
+require 'vericred/future_proxy'
+require 'vericred/connection'
+require 'vericred/resources'
 
 module Vericred
   def self.config
