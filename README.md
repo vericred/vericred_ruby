@@ -53,9 +53,9 @@ Sideloaded data is automatically added to the object found.  For example,
 with the following response (simplified)
 ```json
 {
-    zip_counties: [{id: 1, zip_code_id: 2, county_id: 3}],
-    counties: [{id: 3, name: 'County'}],
-    zip_codes: [{id: 2, code: '12345'}]
+    "zip_counties": [{"id": 1, "zip_code_id": 2, "county_id": 3}],
+    "counties": [{"id": 3, "name": "County"}],
+    "zip_codes": [{"id": 2, "code": "12345"}]
 }
 ```
 
@@ -110,8 +110,8 @@ Every instance of `Vericred::Error` has an `#errors` method, which returns
 the parsed error messages from the server.  They are in the format.
 ```json
 {
-    errors: {
-        field_or_category: ['list', 'of', 'things', 'wrong']
+    "errors": {
+        "field_or_category": ["list", "of", "things", "wrong"]
     }
 }
 ```
