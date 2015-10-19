@@ -53,16 +53,14 @@ module Vericred
       (data[root_name.pluralize] || []).map { |row| new(row, data) }
     end
 
-    def initialize(attributes, full_data = {})
-      parse_relationships(attributes, full_data)
-      @data = OpenStruct.new(attributes)
+    def initialize(attrs, full_data = {})
+      parse_relationships(attrs, full_data)
+      @data = OpenStruct.new(attrs)
     end
 
     private
 
-    def self.make_request(verb, uri, *args)
-      logger.info { "#{verb.to_s.upcase} #{uri} with #{args}"}
-      response = connection.send(verb, "#{BASE_URL}#{uri}", *args)
+    def self.handle_response(response)
       case response.status
       when 200..299 then JSON.parse(response.content)
       when 401 then fail Vericred::UnauthenticatedError, response
@@ -73,26 +71,41 @@ module Vericred
       end
     end
 
+    def self.make_request(verb, uri, *args)
+      logger.info { "#{verb.to_s.upcase} #{uri} with #{args}"}
+      response = nil
+      ActiveSupport::Notifications
+        .instrument "vericred.http_request", opts: [verb, uri, *args] do
+          response = connection.send(verb, "#{BASE_URL}#{uri}", *args)
+        end
+      handle_response(response)
+    end
+
     def method_missing(m, *args, &block)
       return @data.send(m, *args, &block) if @data.respond_to?(m)
       super
     end
 
-    def parse_relationships(attributes, full_data)
+    def parse_plural_relationship(relationship, attrs, full_data)
+      attrs[relationship.root_name] =
+        full_data[relationship.root_name]
+          .select { |row| attrs[relationship.foreign_key].include?(row['id'])}
+          .map { |row| OpenStruct.new(row) }
+    end
+
+    def parse_singular_relationship(relationship, attrs, full_data)
+      record = full_data[relationship.root_name]
+                 .find { |row| row['id'] == attrs[relationship.foreign_key] }
+      attrs[relationship.root_name.singularize] =
+        record ? OpenStruct.new(record) : nil
+    end
+
+    def parse_relationships(attrs, full_data)
       relationships.values.map(&:values).flatten.each do |relationship|
         next if full_data[relationship.root_name].blank?
-        if relationship.singular?
-          record = full_data[relationship.root_name].find do |row|
-                    row['id'] == attributes[relationship.foreign_key]
-                   end
-          attributes[relationship.root_name.singularize] =
-            record ? OpenStruct.new(record) : nil
-        else
-          attributes[relationship.root_name] =
-            full_data[relationship.root_name]
-              .select { |row| attributes[relationship.foreign_key].include?(row['id'])}
-              .map { |row| OpenStruct.new(row) }
-        end
+        relationship.singular? ?
+          parse_singular_relationship(relationship, attrs, full_data) :
+          parse_plural_relationship(relationship, attrs, full_data)
       end
     end
   end
