@@ -21,18 +21,18 @@ gem 'vericred'
 
 And then execute:
 
-    $ bundle
+  $ bundle
 
 Or install it yourself as:
 
-    $ gem install vericred
+  $ gem install vericred
 
 ### With Rails
 
 Add a configuration block in `config/initializers/vericred.rb`
 ```ruby
 Vericred.configure do |config|
-    config.api_key = ENV['VERICRED_API_KEY']
+  config.api_key = ENV['VERICRED_API_KEY']
 end
 ```
 
@@ -46,7 +46,28 @@ Vericred::Provider.find(npi) # => Vericred::Provider
 ### Retrieving a List of Records
 ```ruby
 Vericred::Provider.search(search_term: 'foo', zip_code: '11215')
-    # => [Vericred::Provider, Vericred::Provider]
+  # => [Vericred::Provider, Vericred::Provider]
+```
+
+#### Searching for Plans
+When searching for Plans, you may supply one or more applicants to retrieve
+pricing.  The `smoker` flag only need be supplied if it is true.
+
+```ruby
+Vericred::Plan.search(
+  zip_code: '11215',
+  fips_code: '36047',
+  market: 'individual',
+  applicants: [
+    { age: 31 },
+    { age: 42, smoker: true }
+  ],
+  providers: [
+    { npi: 1841293990 },
+    { npi: 1740283779 }
+  ]
+)
+  # => [Vericred::Plan<premium=401.23>, Vericred::Plan<premium=501.13>]
 ```
 
 ### Sideloaded data
@@ -55,9 +76,9 @@ Sideloaded data is automatically added to the object found.  For example,
 with the following response (simplified)
 ```json
 {
-    "zip_counties": [{"id": 1, "zip_code_id": 2, "county_id": 3}],
-    "counties": [{"id": 3, "name": "County"}],
-    "zip_codes": [{"id": 2, "code": "12345"}]
+  "zip_counties": [{"id": 1, "zip_code_id": 2, "county_id": 3}],
+  "counties": [{"id": 3, "name": "County"}],
+  "zip_codes": [{"id": 2, "code": "12345"}]
 }
 ```
 
@@ -88,42 +109,42 @@ providers = futures.map(&:value)
 Generic error handling:
 ```ruby
 begin
-    Vericred::Provider.find(npi)
+  Vericred::Provider.find(npi)
 rescue Vericred::Error => e
-    # Retry or do something else
+  # Retry or do something else
 end
 ```
 
 Handling each possible error
 ```ruby
 begin
-    Vericred::Provider.find(npi)
+  Vericred::Provider.find(npi)
 rescue Vericred::UnauthenticatedError => e
-    # No credentials supplied
+  # No credentials supplied
 rescue Vericred::UnauthorizedError => e
-    # Invalid credentials
+  # Invalid credentials
 rescue Vericred::UnprocessableEntityError => e
-    # Invalid parameters have been specified
+  # Invalid parameters have been specified
 rescue Vericred::UnknownError => e
-    # Something else has gone wrong - see e.errors for details
+  # Something else has gone wrong - see e.errors for details
 end
 ```
 Every instance of `Vericred::Error` has an `#errors` method, which returns
 the parsed error messages from the server.  They are in the format.
 ```json
 {
-    "errors": {
-        "field_or_category": ["list", "of", "things", "wrong"]
-    }
+  "errors": {
+    "field_or_category": ["list", "of", "things", "wrong"]
+  }
 }
 ```
 
 When parsed, they can be accessed like:
 ```ruby
 begin
-    Vericred::Provider.find(npi)
+  Vericred::Provider.find(npi)
 rescue Vericred::Error => e
-    e.errors.field_or_category.join(', ') # "list, of, things, wrong"
+  e.errors.field_or_category.join(', ') # "list, of, things, wrong"
 end
 ```
 
