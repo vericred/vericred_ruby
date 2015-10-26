@@ -2,6 +2,8 @@
 
 [![Code Climate](https://codeclimate.com/repos/562a2857e30ba04788014399/badges/07d05b9b6da4fdd2aca6/gpa.svg)](https://codeclimate.com/repos/562a2857e30ba04788014399/feed)
 
+[![Build Status](https://travis-ci.org/vericred/vericred_ruby.svg?branch=master)](https://travis-ci.org/vericred/vericred_ruby)
+
 A client gem to interact with the Vericred API.  It provides useful helpers for:
 
 - Futures
