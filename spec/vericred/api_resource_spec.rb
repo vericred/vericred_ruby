@@ -81,7 +81,7 @@ describe Vericred::ApiResource do
         .to have_received(:get)
         .with(
           'https://api.vericred.com/foo_bars',
-          { a: 'b', c: ['d', 'e'] },
+          "a=b&c%5B%5D=d&c%5B%5D=e",
           { 'Vericred-Api-Key' => '123' }
         )
     end
