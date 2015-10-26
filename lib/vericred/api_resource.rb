@@ -49,7 +49,7 @@ module Vericred
     end
 
     def self.search(query = {})
-      data = make_request(:get, uri, query, headers)
+      data = make_request(:get, uri, query.to_query, headers)
       (data[root_name.pluralize] || []).map { |row| new(row, data) }
     end
 
@@ -71,8 +71,13 @@ module Vericred
       end
     end
 
+    def self.log_request(verb, uri, *args)
+      args = args.map { |arg| arg.is_a?(String) ? URI.unescape(arg) : arg }
+      logger.info { "[#{verb.to_s.upcase}] to #{uri} with #{args}" }
+    end
+
     def self.make_request(verb, uri, *args)
-      logger.info { "#{verb.to_s.upcase} #{uri} with #{args}"}
+      log_request(verb, uri, *args)
       response = nil
       ActiveSupport::Notifications
         .instrument "vericred.http_request", opts: [verb, uri, *args] do
