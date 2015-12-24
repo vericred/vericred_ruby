@@ -19,6 +19,23 @@ module Vericred
     attr_reader :response
   end
 
+
+  TotalNotSupportedError = Class.new(Error) do
+    def initialize(klass)
+      @klass = klass
+    end
+
+    def errors
+      OpenStruct.new(
+        not_supported: ["#{klass} does not support total"]
+      )
+    end
+
+    def status
+      422
+    end
+  end
+
   UnauthenticatedError = Class.new(Error)
   UnauthorizedError = Class.new(Error)
   UnprocessableEntityError = Class.new(Error)

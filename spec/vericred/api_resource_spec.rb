@@ -220,4 +220,52 @@ describe Vericred::ApiResource do
       end
     end
   end
+
+
+  context '.total' do
+    context 'when total is supported' do
+      it 'pulls the total out of the metadata' do
+        Vericred::ApiResource.connection =
+          double(
+            :connection,
+            get: OpenStruct.new(
+              status: 200,
+              content: JSON.unparse({
+                foo_bars: [
+                  { id: 1, a: 'b' }
+                ],
+                meta: {
+                  total: 100
+                }
+              })
+            )
+          )
+        Vericred.config.api_key = '123'
+
+        expect(Vericred::FooBar.total(a: 'b', c: ['d', 'e']))
+          .to eql(100)
+      end
+    end
+
+    context 'when total is not supported' do
+      it 'goes boom' do
+        Vericred::ApiResource.connection =
+          double(
+            :connection,
+            get: OpenStruct.new(
+              status: 200,
+              content: JSON.unparse({
+                foo_bars: [
+                  { id: 1, a: 'b' }
+                ]
+              })
+            )
+          )
+        Vericred.config.api_key = '123'
+
+        expect { Vericred::FooBar.total(a: 'b', c: ['d', 'e']) }
+          .to raise_error(Vericred::TotalNotSupportedError)
+      end
+    end
+  end
 end
