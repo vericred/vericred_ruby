@@ -51,6 +51,13 @@ Vericred::Provider.search(search_term: 'foo', zip_code: '11215')
   # => [Vericred::Provider, Vericred::Provider]
 ```
 
+### Retrieving a total count from the List endpoint
+To return a total count, use the `total` method in place of the `search method`
+```ruby
+Vericred::Provider.total(search_term: 'foo', zip_code: '11215')
+  # => 100
+```
+
 #### Searching for Plans
 When searching for Plans, you may supply one or more applicants to retrieve
 pricing.  The `smoker` flag only need be supplied if it is true.
@@ -94,7 +101,7 @@ zip_counties.first.zip_code.code # => 12345
 ```
 
 ### Using Futures
-Any individual or list of records can be found using a Future.  This
+Any individual, list of records, or total can be found using a Future.  This
 allows you to make a request early in the execution of your codepath 
 and allow the API to return a result without blocking execution.  It also
 allows you to make requests to the API in parallel.
@@ -104,6 +111,17 @@ futures = [npi1, npi2, npi3]
             .map { |id| Vericred::Provider.future.find(npi) }
 # do some other stuff in the meantime, then call #value to get the result
 providers = futures.map(&:value)
+
+futures =
+  [1, 2, 3].map do |i|
+    Vericred::Provider.future.total(
+      zip_code: '12345',
+      radius: i,
+      search_term: 'foo'
+    )
+  end
+# do some other stuff in the meantime, then call #value to get the result
+totals = futures.map(&:value)
 ```
 
 ### Error Handling

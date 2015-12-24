@@ -53,6 +53,13 @@ module Vericred
       (data[root_name.pluralize] || []).map { |row| new(row, data) }
     end
 
+    def self.total(query = {})
+      query.merge!(page: 1, per_page: 1)
+      make_request(:get, uri, query.to_query, headers)
+        .fetch('meta', nil)
+        .try(:fetch, 'total', nil) || total_not_supported
+    end
+
     def initialize(attrs, full_data = {})
       parse_relationships(attrs, full_data)
       @data = OpenStruct.new(attrs)
@@ -84,6 +91,10 @@ module Vericred
           response = connection.send(verb, "#{BASE_URL}#{uri}", *args)
         end
       handle_response(response)
+    end
+
+    def self.total_not_supported
+      fail TotalNotSupportedError, self
     end
 
     def method_missing(m, *args, &block)
